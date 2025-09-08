@@ -1,11 +1,13 @@
 import type { Request, Response, Router } from "express";
 import express from 'express';
 import User from "../models/User.ts";
-import { hashPassword } from "../services/authServices.ts";
+import { hashPassword, verifyPassword } from "../services/authServices.ts";
 import { createResponse } from "../utils/helperFunctions.ts";
 import Patient from "../models/Patient.ts";
 import Therapist from "../models/Therapist.ts";
 
+
+// /auth
 const authController: Router = express.Router();
 
 
@@ -39,6 +41,23 @@ authController.post("/auth/signup", async(req: Request, resp: Response): Promise
             if(!savedTherapist) throw new Error("Could not save Therapist. Try again");
         }
 
+    } catch (error: any) {
+        resp.status(500).json(createResponse(error.message, {}, null));
+    }
+})
+
+
+authController.post("/auth/login", async(req: Request, resp: Response): Promise<void> => {
+    try {
+        const {emailId, password} = req?.body;
+        const user = await User.findOne({ emailId }).exec();
+
+        if (!user || !user.password || !verifyPassword(password, user.password)) {
+            resp.status(401).json(createResponse("Invalid email or password", {}, null));
+            return;
+        }
+
+        resp.status(302).redirect('/profile');
     } catch (error: any) {
         resp.status(500).json(createResponse(error.message, {}, null));
     }
