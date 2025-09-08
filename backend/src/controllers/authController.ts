@@ -14,6 +14,8 @@ const authController: Router = express.Router();
 authController.post("/auth/signup", async(req: Request, resp: Response): Promise<void> => {
     try {
         const {name, emailId, password, role} = req?.body;
+        const existingUser = await User.findOne({emailId});
+        if(existingUser) throw new Error("Email already registered");
 
         const user = new User({
             name: name,
@@ -21,6 +23,7 @@ authController.post("/auth/signup", async(req: Request, resp: Response): Promise
             password: hashPassword(password),
             role: role
         });
+
         const savedUser = await user.save();
         if(!savedUser) throw new Error("Could not save user. Try again");
 
@@ -40,7 +43,7 @@ authController.post("/auth/signup", async(req: Request, resp: Response): Promise
             const savedTherapist = therapist.save();
             if(!savedTherapist) throw new Error("Could not save Therapist. Try again");
         }
-
+        resp.status(201).json(createResponse("User created successfully!", {}, null));
     } catch (error: any) {
         resp.status(500).json(createResponse(error.message, {}, null));
     }
@@ -50,10 +53,10 @@ authController.post("/auth/signup", async(req: Request, resp: Response): Promise
 authController.post("/auth/login", async(req: Request, resp: Response): Promise<void> => {
     try {
         const {emailId, password} = req?.body;
-        const user = await User.findOne({ emailId }).exec();
+        const user = await User.findOne({ emailId });
 
         if (!user || !user.password || !verifyPassword(password, user.password)) {
-            resp.status(401).json(createResponse("Invalid email or password", {}, null));
+            resp.status(401).json(createResponse("Invalid credentials", {}, null));
             return;
         }
 
@@ -61,4 +64,7 @@ authController.post("/auth/login", async(req: Request, resp: Response): Promise<
     } catch (error: any) {
         resp.status(500).json(createResponse(error.message, {}, null));
     }
-})
+});
+
+
+export default authController;

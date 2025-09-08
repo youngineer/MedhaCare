@@ -22,17 +22,17 @@ const therapistSchema = new Schema<ITherapist>({
     rating: {
         type: Number,
         default: 0,
-        validate(value: string) {
-            if(!validator.isInt(value, {min: 0, max: 10})) {
+        validate(value: number) {
+            if(!(0 <= value && value <= 10)) {
                 throw new Error("Rating should be between [0-10]");
             }
         }
     },
     ratePerSession: {
         type: Number,
-        default: 0,
-        validate(value: string) {
-            if(!validator.isDecimal(value)) {
+        default: 1,
+        validate(value: number) {
+            if(value % 1 != 0) {
                 throw new Error("Rate should be a decimal");
             }
         }
@@ -47,7 +47,7 @@ const therapistSchema = new Schema<ITherapist>({
 therapistSchema.index({ userId: 1 }, { unique: true, name: 'idx_therapist_userId' });
 
 
-const Therapist = model<ITherapist>('Patient', therapistSchema);
+const Therapist = model<ITherapist>('Therapist', therapistSchema);
 
 
 export default Therapist;
