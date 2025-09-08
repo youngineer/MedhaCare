@@ -1,5 +1,5 @@
-type Role = "patient" | "admin" | "therapist" | null;
-
+export type Role = "patient" | "admin" | "therapist" | null;
+export type Gender = "male" | "female";
 
 // Response
 export interface IResponse {
@@ -28,6 +28,8 @@ export interface IUser extends ISignUpRequest{
 
 // Patient
 export interface IPatient extends IUser{
+    userId: string;
+    gender: Gender;
     dateOfBirth: Date;
     healthConditions: string[];
     contact: string;
@@ -36,8 +38,9 @@ export interface IPatient extends IUser{
 
 // Therapist 
 export interface ITherapist extends IUser {
+    userId: string;
     bio: string;
-    specialities: string[];
+    specialties: string[];
     ratePerSession: number;
     availability: Date[];
     rating: number
