@@ -17,6 +17,29 @@ export interface ILoginRequest {
 
 export interface ISignUpRequest extends ILoginRequest{
     name: string;
+    role: Role;
+}
+
+export interface ILoginResponse {
+    success: boolean;
+    message: string;
+    user?: {
+        id: string;
+        name: string;
+        emailId: string;
+        role: Role;
+    };
+}
+
+export interface ISignUpResponse {
+    success: boolean;
+    message: string;
+}
+
+// Service interfaces
+export interface IAuthService {
+    signup(signupData: ISignUpRequest): Promise<ISignUpResponse>;
+    login(loginData: ILoginRequest): Promise<ILoginResponse>;
 }
 
 
