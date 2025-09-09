@@ -6,7 +6,7 @@ import { createResponse } from "../utils/helperFunctions.ts";
 const therapistController: Router = express.Router();
 
 
-therapistController.get("/therapist/all", auth, async(req: Request, resp: Response): Promise<void> => {
+therapistController.get("/therapist/get", auth, async(req: Request, resp: Response): Promise<void> => {
     try {
         const serviceResponse = await therapistServices.getAllTherapists();
         resp.status(200).json(createResponse(serviceResponse?.message, serviceResponse.content, req?.user?.role));
@@ -16,9 +16,9 @@ therapistController.get("/therapist/all", auth, async(req: Request, resp: Respon
 });
 
 
-therapistController.get("/therapist/profile", auth, async(req: Request, resp: Response): Promise<void> => {
+therapistController.get("/therapist/get/:userId", auth, async(req: Request, resp: Response): Promise<void> => {
     try {
-        const { therapistId } = req?.body;
+        const therapistId = req?.params?.userId;
         if(!therapistId) throw new Error("Invalid request");
 
         const serviceResponse = await therapistServices.getTherapist(therapistId);
@@ -27,6 +27,19 @@ therapistController.get("/therapist/profile", auth, async(req: Request, resp: Re
         resp.status(500).json(createResponse(error.message, {}, req?.user?.role));
     }
 });
+
+
+therapistController.patch("/therapist/update", auth, async(req: Request, resp: Response): Promise<void> => {
+    try {
+        const therapistId = req?.params?.userId;
+        if(!therapistId) throw new Error("Invalid request");
+
+        const serviceResponse = await therapistServices.getTherapist(therapistId);
+        resp.status(200).json(createResponse(serviceResponse?.message, serviceResponse.content, req?.user?.role));
+    } catch (error: any) {
+        resp.status(500).json(createResponse(error.message, {}, req?.user?.role));
+    }
+})
 
 
 export default therapistController;
