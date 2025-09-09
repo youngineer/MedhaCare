@@ -1,4 +1,4 @@
-import { model, Schema } from "mongoose";
+import { model, Schema, type Document } from "mongoose";
 import type { IUser } from "../utils/interfaces.ts";
 import validator from 'validator';
 import { DEFAULT_PHOTO_URL } from "../utils/constants.ts";
@@ -8,7 +8,9 @@ import bcrypt from 'bcrypt';
 dotenv.config();
 
 
-const userSchema = new Schema<IUser>({
+export interface IUserDocument extends IUser, Document {}
+
+const userSchema = new Schema<IUserDocument>({
     name: {
         type: String, 
         required: true,
@@ -55,20 +57,20 @@ const userSchema = new Schema<IUser>({
     { timestamps: true }
 );
 
-userSchema.methods.getJWT = function(): string {
+userSchema.methods.getJWT = function(this: IUserDocument): string {
     const user = this;
     const secret: string = process.env.JWT_SECRET as string;
     const token: string = jwt.sign({ _id: user._id }, secret);
     return token;
 };
 
-userSchema.methods.authenticate = async function(userPassword: string):Promise<boolean> {
+userSchema.methods.authenticate = async function(this: IUserDocument, userPassword: string):Promise<boolean> {
     const user = this;
-    const userPasswordHash: string = user?.password;
+    const userPasswordHash: string = user?.password as string;
 
     return await bcrypt.compare(userPassword, userPasswordHash);
 };
 
-const User = model<IUser>('User', userSchema);
+const User = model<IUserDocument>('User', userSchema);
 
 export default User;

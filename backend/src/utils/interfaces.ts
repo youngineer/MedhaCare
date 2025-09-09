@@ -23,12 +23,8 @@ export interface ISignUpRequest extends ILoginRequest{
 export interface ILoginResponse {
     success: boolean;
     message: string;
-    user?: {
-        id: string;
-        name: string;
-        emailId: string;
-        role: Role;
-    };
+    role?: Role;
+    token?: string;
 }
 
 export interface ISignUpResponse {

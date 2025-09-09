@@ -103,7 +103,8 @@ export class AuthService implements IAuthService {
             if (!user || !user.password) {
                 return {
                     success: false,
-                    message: "Invalid login credentials"
+                    message: "Invalid login credentials",
+                    token: ""
                 };
             }
 
@@ -111,19 +112,18 @@ export class AuthService implements IAuthService {
             if (!isPasswordValid) {
                 return {
                     success: false,
-                    message: "Invalid credentials"
+                    message: "Invalid credentials",
+                    token: ""
                 };
             }
+
+            const token: string = user.getJWT();
 
             return {
                 success: true,
                 message: "Login successful!",
-                user: {
-                    id: user._id.toString(),
-                    name: user.name,
-                    emailId: user.emailId,
-                    role: user.role
-                }
+                role: user?.role,
+                token: token
             };
 
         } catch (error: any) {
@@ -135,5 +135,4 @@ export class AuthService implements IAuthService {
     }
 }
 
-// Export singleton instance
 export const authService = new AuthService();

@@ -28,7 +28,15 @@ authController.post("/auth/login", async (req: Request, resp: Response): Promise
         const result = await authService.login(loginData);
         
         if (result.success) {
-            resp.status(200).json(createResponse(result.message, result.user || {}, result.user?.role || null));
+            const token = result?.token;
+            resp.cookie("token", token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                maxAge: 24 * 60 * 60 * 1000
+            });
+
+            resp.status(200).json(createResponse(result.message, {}, result.role || null));
         } else {
             resp.status(401).json(createResponse(result.message, {}, null));
         }
