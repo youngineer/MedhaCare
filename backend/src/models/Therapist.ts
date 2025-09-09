@@ -1,7 +1,7 @@
 import { Schema, model } from 'mongoose';
 import validator from 'validator';
 import User from './User.js';
-import { type ITherapist } from '../utils/interfaces.ts';
+import { type ITherapist } from '../types/interfaces.ts';
 import { THERAPIST_BIO } from '../utils/constants.ts';
 
 const therapistSchema = new Schema<ITherapist>({

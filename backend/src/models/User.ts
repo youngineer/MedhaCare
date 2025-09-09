@@ -1,5 +1,5 @@
 import { model, Schema, type Document } from "mongoose";
-import type { IUser } from "../utils/interfaces.ts";
+import type { IUser } from "../types/interfaces.ts";
 import validator from 'validator';
 import { DEFAULT_PHOTO_URL } from "../utils/constants.ts";
 import dotenv from 'dotenv';

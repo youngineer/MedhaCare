@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import type { IMood } from "../utils/interfaces.ts";
+import type { IMood } from "../types/interfaces.ts";
 
 
 const moodSchema = new Schema<IMood> ({

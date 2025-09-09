@@ -69,6 +69,13 @@ export interface ITherapist extends IUser {
 }
 
 
+// Therapist services
+export interface ITherapistServices {
+    getAllTherapists(): Promise<IResponse>;
+    getTherapist(id: string): Promise<IResponse>
+}
+
+
 // Mood Logs
 export interface IMood {
     patientId: string;

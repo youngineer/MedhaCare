@@ -9,7 +9,7 @@ import type {
     ISignUpRequest, 
     ILoginResponse, 
     ISignUpResponse 
-} from "../utils/interfaces.js";
+} from "../types/interfaces.ts";
 
 export const hashPassword = (password: string): string => {
     return bcrypt.hashSync(password, 10);

@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import { type ISession } from "../utils/interfaces.ts";
+import { type ISession } from "../types/interfaces.ts";
 
 const sessionSchema = new Schema<ISession>({
     patientId: {

@@ -2,7 +2,7 @@ import type { Request, Response, Router } from "express";
 import express from 'express';
 import { authService } from "../services/authServices.js";
 import { createResponse } from "../utils/helperFunctions.js";
-import type { ILoginRequest, ISignUpRequest } from "../utils/interfaces.js";
+import type { ILoginRequest, ISignUpRequest } from "../types/interfaces.ts";
 
 // path-> /auth
 const authController: Router = express.Router();
@@ -44,5 +44,14 @@ authController.post("/auth/login", async (req: Request, resp: Response): Promise
         resp.status(500).json(createResponse("Internal server error: " + error, {}, null));
     }
 });
+
+
+authController.post("/auth/logout", async(req: Request, resp: Response) => {
+    resp.cookie("token", null, {
+        expires: new Date(Date.now())
+    });
+
+    resp.status(200).json(createResponse("Logout successful!", {}, null));
+})
 
 export default authController;
