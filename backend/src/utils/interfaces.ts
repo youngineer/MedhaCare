@@ -22,7 +22,9 @@ export interface ISignUpRequest extends ILoginRequest{
 // User
 export interface IUser extends ISignUpRequest{
     role: Role;
-    photoUrl: string
+    photoUrl: string;
+    authenticate(password: string): Promise<boolean>;
+    getJWT(): string;
 }
 
 

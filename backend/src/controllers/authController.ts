@@ -1,7 +1,7 @@
 import type { Request, Response, Router } from "express";
 import express from 'express';
 import User from "../models/User.ts";
-import { hashPassword, verifyPassword } from "../services/authServices.ts";
+import { hashPassword } from "../services/authServices.ts";
 import { createResponse } from "../utils/helperFunctions.ts";
 import Patient from "../models/Patient.ts";
 import Therapist from "../models/Therapist.ts";
@@ -40,7 +40,7 @@ authController.post("/auth/signup", async(req: Request, resp: Response): Promise
                 userId: savedUser.id
             });
 
-            const savedTherapist = therapist.save();
+            const savedTherapist = await therapist.save();
             if(!savedTherapist) throw new Error("Could not save Therapist. Try again");
         }
         resp.status(201).json(createResponse("User created successfully!", {}, null));
@@ -55,12 +55,17 @@ authController.post("/auth/login", async(req: Request, resp: Response): Promise<
         const {emailId, password} = req?.body;
         const user = await User.findOne({ emailId });
 
-        if (!user || !user.password || !verifyPassword(password, user.password)) {
+        if (!user || !user.password) {
+            resp.status(401).json(createResponse("Invalid login", {}, null));
+            return;
+        }
+
+    if(!(await user.authenticate(password))) {
             resp.status(401).json(createResponse("Invalid credentials", {}, null));
             return;
         }
 
-        resp.status(302).redirect('/profile');
+        resp.status(200).json(createResponse("Login successful!", {}, user?.role));
     } catch (error: any) {
         resp.status(500).json(createResponse(error.message, {}, null));
     }
