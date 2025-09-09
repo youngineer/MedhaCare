@@ -47,6 +47,7 @@ export interface IAuthService {
 
 // User
 export interface IUser extends ISignUpRequest{
+    _id?: string;
     role: Role;
     photoUrl: string;
     authenticate(password: string): Promise<boolean>;
@@ -78,7 +79,7 @@ export interface ITherapist extends IUser {
 // Therapist services
 export interface ITherapistServices {
     getAllTherapists(): Promise<IServiceResponse>;
-    // getTherapist(id: string): Promise<IServiceResponse>
+    getTherapist(id: string): Promise<IServiceResponse>
 }
 
 

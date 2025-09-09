@@ -51,8 +51,17 @@ export class TherapistServices implements ITherapistServices {
 
     async getTherapist(id: string): Promise<IServiceResponse> {
         try {
-            const therapist: IUser | null = await User.findOne({ _id: id, role: "therapist" }, '_id name photoUrl').exec();
+            const therapistUser: IUser | null = await User.findOne({ _id: id, role: "therapist" }, 'name photoUrl').exec();
 
+            if (!therapistUser) {
+                return {
+                    message: "Therapist not found",
+                    content: {},
+                    status: false
+                };
+            }
+
+            const therapist = await Therapist.findOne({ userId: id });
             if (!therapist) {
                 return {
                     message: "Therapist not found",
@@ -61,9 +70,20 @@ export class TherapistServices implements ITherapistServices {
                 };
             }
 
+            const toReturn = {
+                userId: id,
+                name: therapistUser?.name,
+                photoUrl: therapistUser?.photoUrl,
+                bio: therapist?.bio,
+                specialties: therapist?.specialties,
+                ratePerSession: therapist?.ratePerSession,
+                availability: therapist?.availability,
+                rating: therapist?.rating
+            }
+
             return {
                 message: "Therapist fetched successfully",
-                content: therapist,
+                content: toReturn,
                 status: true
             };
         } catch (error: any) {
