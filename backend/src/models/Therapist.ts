@@ -1,13 +1,11 @@
 import { Schema, model } from 'mongoose';
-import validator from 'validator';
-import User from './User.js';
 import { type ITherapist } from '../types/interfaces.ts';
 import { THERAPIST_BIO } from '../utils/constants.ts';
 
 const therapistSchema = new Schema<ITherapist>({
     userId: {
         type: String,
-        ref: User,
+        ref: 'User',
         required: true,
         unique: true
     },

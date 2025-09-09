@@ -13,8 +13,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "i2": "node i2.js",
-    "start": "node src/index.ts",
-    "dev": "nodemon ts-node src/index.ts"
+  "start": "node src/index.ts",
+  "dev": "nodemon --exec \"npx ts-node\" src/index.ts"
   },
   "dependencies": {
     "accepts": "^2.0.0",

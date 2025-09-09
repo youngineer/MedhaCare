@@ -1,15 +1,15 @@
 
 import bcrypt from "bcrypt";
-import User from "../models/User.js";
-import Patient from "../models/Patient.js";
-import Therapist from "../models/Therapist.js";
 import type { 
     IAuthService, 
     ILoginRequest, 
     ISignUpRequest, 
     ILoginResponse, 
     ISignUpResponse 
-} from "../types/interfaces.ts";
+} from "../utils/interfaces.ts";
+import User from "../models/User.ts";
+import Patient from "../models/Patient.ts";
+import Therapist from "../models/Therapist.ts";
 
 export const hashPassword = (password: string): string => {
     return bcrypt.hashSync(password, 10);

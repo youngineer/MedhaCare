@@ -2,10 +2,16 @@ export type Role = "patient" | "admin" | "therapist" | null;
 export type Gender = "male" | "female";
 export type SessionStatus = "pending" | "completed"| "patientNoShow" | "therapistNoShow";
 
-// Response
-export interface IResponse {
+
+
+//Service Response
+export interface IServiceResponse {
+    status?: boolean;
     message: string;
     content: Object;
+}
+// Response
+export interface IControllerResponse extends IServiceResponse {
     role: Role;
 }
 
@@ -71,8 +77,8 @@ export interface ITherapist extends IUser {
 
 // Therapist services
 export interface ITherapistServices {
-    getAllTherapists(): Promise<IResponse>;
-    getTherapist(id: string): Promise<IResponse>
+    getAllTherapists(): Promise<IServiceResponse>;
+    // getTherapist(id: string): Promise<IServiceResponse>
 }
 
 

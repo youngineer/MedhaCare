@@ -4,6 +4,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import connectToDb from './config/database.ts';
 import authController from './controllers/authController.ts';
+import therapistController from './controllers/therapistController.ts';
 dotenv.config();
 
 // const PORT: string = process.env.PORT as string;
@@ -24,6 +25,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use(authController);
+app.use(therapistController);
 
 connectToDb()
     .then(() => {
