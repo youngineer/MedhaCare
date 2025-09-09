@@ -1,5 +1,6 @@
 export type Role = "patient" | "admin" | "therapist" | null;
 export type Gender = "male" | "female";
+export type SessionStatus = "pending" | "completed"| "patientNoShow" | "therapistNoShow";
 
 // Response
 export interface IResponse {
@@ -64,9 +65,12 @@ export interface IChatMessage {
     botResponse: string
 }
 
+
 // Session
-// export interface ISession {
-//     dateTime: Date;
-//     notes: string
-//     patientId: 
-// }
+export interface ISession {
+    dateTime: Date;
+    notes: string
+    patientId: string;
+    therapistId: string;
+    status: SessionStatus
+}
