@@ -2,7 +2,7 @@ import type { Request, Response, Router } from "express";
 import express from 'express';
 import { authService } from "../services/authServices.ts";
 import { createResponse } from "../utils/helperFunctions.ts";
-import type { ILoginRequest, ISignUpRequest } from "../utils/interfaces.ts";
+import type { ILoginRequest, ISignUpRequest } from "../types/interfaces.ts";
 
 // path-> /auth
 const authController: Router = express.Router();

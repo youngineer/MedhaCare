@@ -6,7 +6,7 @@ import type {
     ISignUpRequest, 
     ILoginResponse, 
     ISignUpResponse 
-} from "../utils/interfaces.ts";
+} from "../types/interfaces.ts";
 import User from "../models/User.ts";
 import Patient from "../models/Patient.ts";
 import Therapist from "../models/Therapist.ts";
