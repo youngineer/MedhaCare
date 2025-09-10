@@ -64,6 +64,15 @@ export interface IPatient extends IUser{
     contact: string;
 }
 
+// Patient services
+export interface IPatientServices {
+    getAllPatients(): Promise<IServiceResponse>;
+    getPatient(id: string): Promise<IServiceResponse>;
+    updatePatient(id: string, payload: Partial<IPatient>): Promise<IServiceResponse>;
+    deletePatient(id: string): Promise<IServiceResponse>;
+}
+
+
 
 // Therapist 
 export interface ITherapist extends IUser {
