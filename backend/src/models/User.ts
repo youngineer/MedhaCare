@@ -8,7 +8,7 @@ import bcrypt from 'bcrypt';
 dotenv.config();
 
 
-export interface IUserDocument extends IUser, Document {}
+export interface IUserDocument extends Document, Omit<IUser, '_id'> {}
 
 const userSchema = new Schema<IUserDocument>({
     name: {

@@ -1,6 +1,6 @@
 
 import Therapist from "../models/Therapist.ts";
-import User from "../models/User.ts";
+import User, { type IUserDocument } from "../models/User.ts";
 import type { IServiceResponse, ITherapist, ITherapistServices, IUser } from "../types/interfaces.ts";
 
 export class TherapistServices implements ITherapistServices {
@@ -51,7 +51,7 @@ export class TherapistServices implements ITherapistServices {
 
     async getTherapist(id: string): Promise<IServiceResponse> {
         try {
-            const therapistUser: IUser | null = await User.findOne({ _id: id, role: "therapist" }, 'name photoUrl').exec();
+            const therapistUser: IUserDocument | null = await User.findOne({ _id: id, role: "therapist" }, 'name photoUrl').exec();
 
             if (!therapistUser) {
                 return {
@@ -77,7 +77,8 @@ export class TherapistServices implements ITherapistServices {
                 bio: therapist?.bio,
                 specialties: therapist?.specialties,
                 ratePerSession: therapist?.ratePerSession,
-                availability: therapist?.availability,
+                workingHours: therapist?.workingHours,
+                daysOff: therapist?.daysOff,
                 rating: therapist?.rating
             }
 
@@ -116,17 +117,18 @@ export class TherapistServices implements ITherapistServices {
             }
 
             if (Object.keys(userUpdate).length > 0) {
-                await User.findByIdAndUpdate(id, userUpdate as any).exec();
+                await User.findByIdAndUpdate(id, userUpdate, {runValidators: true}).exec();
             }
 
             const therapistUpdate: Partial<ITherapist> = {};
             if (payload.bio !== undefined) therapistUpdate.bio = payload.bio;
             if (payload.ratePerSession !== undefined) therapistUpdate.ratePerSession = payload.ratePerSession;
-            if (payload.availability !== undefined) therapistUpdate.availability = payload.availability;
+            if (payload.workingHours !== undefined) therapistUpdate.workingHours = payload.workingHours;
+            if (payload.daysOff !== undefined) therapistUpdate.daysOff = payload.daysOff;
             if (payload.specialties !== undefined) therapistUpdate.specialties = payload.specialties;
 
             if (Object.keys(therapistUpdate).length > 0) {
-                await Therapist.findByIdAndUpdate(dbTherapist._id, therapistUpdate as any).exec();
+                await Therapist.findByIdAndUpdate(dbTherapist._id, therapistUpdate, {runValidators: true}).exec();
             }
 
             const updatedUser = await User.findById(id, 'name photoUrl').lean().exec();
@@ -139,7 +141,8 @@ export class TherapistServices implements ITherapistServices {
                 bio: updatedTherapist?.bio,
                 specialties: updatedTherapist?.specialties,
                 ratePerSession: updatedTherapist?.ratePerSession,
-                availability: updatedTherapist?.availability,
+                workingHours: updatedTherapist?.workingHours,
+                daysOff: updatedTherapist?.daysOff,
                 rating: updatedTherapist?.rating
             };
 

@@ -1,6 +1,6 @@
 export type Role = "patient" | "admin" | "therapist" | null;
 export type Gender = "male" | "female";
-export type SessionStatus = "pending" | "completed"| "patientNoShow" | "therapistNoShow";
+export type SessionStatus = "pending" | "completed"| "patientNoShow" | "therapistNoShow" | "cancelled";
 
 
 
@@ -74,14 +74,32 @@ export interface IPatientServices {
 
 
 
+// Working hours for a single day
+export interface IWorkingHours {
+    start: string; // "09:00"
+    end: string;   // "17:00"
+}
+
+// Weekly availability template
+export interface IWeeklyAvailability {
+    monday: IWorkingHours;
+    tuesday: IWorkingHours;
+    wednesday: IWorkingHours;
+    thursday: IWorkingHours;
+    friday: IWorkingHours;
+    saturday: IWorkingHours;
+    sunday: IWorkingHours;
+}
+
 // Therapist 
 export interface ITherapist extends IUser {
     userId: string;
     bio: string;
     specialties: string[];
     ratePerSession: number;
-    availability: Date[];
-    rating: number
+    workingHours: IWeeklyAvailability;
+    daysOff: Date[];
+    rating: number;
 }
 
 
@@ -112,9 +130,24 @@ export interface IChatMessage {
 
 // Session
 export interface ISession {
-    dateTime: Date;
-    notes: string
+    _id?: string;
     patientId: string;
     therapistId: string;
-    status: SessionStatus
+    dateTime: Date;
+    duration: number; // in minutes
+    status: SessionStatus;
+    notes: string;
+    bookingTime?: Date;
+    cancellationReason?: string;
+}
+
+// Session services
+export interface ISessionServices {
+    getAvailableSlots(therapistId: string, date: Date): Promise<IServiceResponse>;
+    postSession(patientId: string, payload: ISession): Promise<IServiceResponse>;
+    getAllSessions(): Promise<IServiceResponse>;
+    getSession(id: string): Promise<IServiceResponse>;
+    updateSession(id: string, payload: Partial<ISession>): Promise<IServiceResponse>;
+    deleteSession(id: string): Promise<IServiceResponse>;
+    cancelSession(sessionId: string, cancellationReason?: string): Promise<IServiceResponse>;
 }

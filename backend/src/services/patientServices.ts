@@ -1,7 +1,7 @@
 
 import Patient from "../models/Patient.ts";
 import patient from "../models/Patient.ts";
-import User from "../models/User.ts";
+import User, { type IUserDocument } from "../models/User.ts";
 import type { IServiceResponse, IPatient, IPatientServices, IUser } from "../types/interfaces.ts";
 
 export class PatientServices implements IPatientServices {
@@ -53,7 +53,7 @@ export class PatientServices implements IPatientServices {
 
     async getPatient(id: string): Promise<IServiceResponse> {
         try {
-            const patientUser: IUser | null = await User.findOne({ _id: id, role: "patient" }, 'name photoUrl').exec();
+            const patientUser: IUserDocument | null = await User.findOne({ _id: id, role: "patient" }, 'name photoUrl').exec();
 
             if (!patientUser) {
                 return {
@@ -117,7 +117,7 @@ export class PatientServices implements IPatientServices {
             }
 
             if (Object.keys(userUpdate).length > 0) {
-                await User.findByIdAndUpdate(id, userUpdate as any).exec();
+                await User.findByIdAndUpdate(id, userUpdate, {runValidators: true}).exec();
             }
 
             const patientUpdate: Partial<IPatient> = {};
@@ -127,7 +127,7 @@ export class PatientServices implements IPatientServices {
             if (payload.healthConditions !== undefined) patientUpdate.healthConditions = payload.healthConditions;
 
             if (Object.keys(patientUpdate).length > 0) {
-                await Patient.findByIdAndUpdate(dbpatient._id, patientUpdate as any).exec();
+                await Patient.findByIdAndUpdate(dbpatient._id, patientUpdate, {runValidators: true}).exec();
             }
 
             const updatedUser = await User.findById(id, 'name photoUrl').lean().exec();

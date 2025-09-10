@@ -5,6 +5,7 @@ import type { IMood } from "../types/interfaces.ts";
 const moodSchema = new Schema<IMood> ({
     patientId: {
         type: String,
+        ref: 'User',
         required: true
     },
     moodLevel: {
