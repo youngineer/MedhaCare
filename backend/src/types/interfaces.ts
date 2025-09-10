@@ -6,7 +6,7 @@ export type SessionStatus = "pending" | "completed"| "patientNoShow" | "therapis
 
 //Service Response
 export interface IServiceResponse {
-    status?: boolean;
+    success?: boolean;
     message: string;
     content: Object;
 }

@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import connectToDb from './config/database.ts';
 import authController from './controllers/authController.ts';
 import therapistController from './controllers/therapistController.ts';
+import sessionController from './controllers/sessionController.ts';
 dotenv.config();
 
 // const PORT: string = process.env.PORT as string;
@@ -26,6 +27,7 @@ app.use(cookieParser());
 
 app.use(authController);
 app.use(therapistController);
+app.use(sessionController);
 
 connectToDb()
     .then(() => {

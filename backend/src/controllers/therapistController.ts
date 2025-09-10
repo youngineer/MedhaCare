@@ -29,7 +29,7 @@ therapistController.get("/therapist/get/:userId", auth, async(req: Request, resp
 });
 
 
-therapistController.patch("/therapist/update/:userId", auth, async(req: Request, resp: Response): Promise<void> => {
+therapistController.patch("/therapist/update", auth, async(req: Request, resp: Response): Promise<void> => {
     try {
         const therapistId = req?.user?._id;
         const payload = req?.body;
@@ -43,7 +43,7 @@ therapistController.patch("/therapist/update/:userId", auth, async(req: Request,
 });
 
 
-therapistController.patch("/therapist/delete/:userId", auth, async(req: Request, resp: Response): Promise<void> => {
+therapistController.delete("/therapist/delete/:userId", auth, async(req: Request, resp: Response): Promise<void> => {
     try {
         const therapistId = req?.params?.userId;
         if(!therapistId || !(req?.user?.role === "admin")) throw new Error("Invalid request");

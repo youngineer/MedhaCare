@@ -10,7 +10,7 @@ export class TherapistServices implements ITherapistServices {
 
             if (!therapists || therapists.length === 0) {
                 return {
-                    status: false,
+                    success: false,
                     message: "No therapists to show",
                     content: {}
                 };
@@ -37,14 +37,14 @@ export class TherapistServices implements ITherapistServices {
             return {
                 message: "Therapists fetched successfully!",
                 content: userTherapists,
-                status: true
+                success: true
             };
 
         } catch (error: any) {
             return {
                 message: error?.message || "Failed to fetch therapists",
                 content: {},
-                status: false
+                success: false
             };
         }
     }
@@ -57,7 +57,7 @@ export class TherapistServices implements ITherapistServices {
                 return {
                     message: "Therapist not found",
                     content: {},
-                    status: false
+                    success: false
                 };
             }
 
@@ -66,7 +66,7 @@ export class TherapistServices implements ITherapistServices {
                 return {
                     message: "Therapist not found",
                     content: {},
-                    status: false
+                    success: false
                 };
             }
 
@@ -85,13 +85,13 @@ export class TherapistServices implements ITherapistServices {
             return {
                 message: "Therapist fetched successfully",
                 content: toReturn,
-                status: true
+                success: true
             };
         } catch (error: any) {
             return {
                 message: error?.message || "Failed to fetch therapist",
                 content: {},
-                status: false
+                success: false
             };
         }
     }
@@ -101,7 +101,7 @@ export class TherapistServices implements ITherapistServices {
             const dbTherapist = await Therapist.findOne({ userId: id }).exec();
             if(!dbTherapist) {
                 return {
-                    status: false,
+                    success: false,
                     message: "Therapist not found",
                     content: {}
                 };
@@ -147,7 +147,7 @@ export class TherapistServices implements ITherapistServices {
             };
 
             return {
-                status: true,
+                success: true,
                 message: "Therapist updated successfully",
                 content: toReturn
             };
@@ -155,7 +155,7 @@ export class TherapistServices implements ITherapistServices {
             return {
                 message: error?.message || "Failed to update therapist",
                 content: {},
-                status: false
+                success: false
             };
         }
     }
@@ -166,7 +166,7 @@ export class TherapistServices implements ITherapistServices {
             const therapist: ITherapist | null = await Therapist.findOneAndDelete({userId: userId});
             if(!therapist) {
                 return {
-                    status: false,
+                    success: false,
                     message: "Therapist not found",
                     content: {}
                 };
@@ -175,14 +175,14 @@ export class TherapistServices implements ITherapistServices {
             const user: IUser | null = await User.findByIdAndDelete(userId);
             if(!user) {
                 return {
-                    status: false,
+                    success: false,
                     message: "User therapist not found",
                     content: {}
                 };
             }
 
             return {
-                status: true,
+                success: true,
                 message: "Therapist deleted successfully",
                 content: {}
             };
@@ -190,7 +190,7 @@ export class TherapistServices implements ITherapistServices {
             return {
                 message: error?.message || "Failed to delete therapist",
                 content: {},
-                status: false
+                success: false
             };
         }
     }

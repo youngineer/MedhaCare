@@ -13,7 +13,7 @@ export class SessionServices implements ISessionServices {
             const therapist = await Therapist.findOne({ userId: therapistId }).lean();
             if (!therapist) {
                 return {
-                    status: false,
+                    success: false,
                     message: "Therapist not found",
                     content: {}
                 };
@@ -26,7 +26,7 @@ export class SessionServices implements ISessionServices {
             
             if (isOff) {
                 return {
-                    status: true,
+                    success: true,
                     message: "No slots available - therapist is off",
                     content: { availableSlots: [] }
                 };
@@ -39,7 +39,7 @@ export class SessionServices implements ISessionServices {
             
             if (!workingHours) {
                 return {
-                    status: true,
+                    success: true,
                     message: "No working hours set for this day",
                     content: { availableSlots: [] }
                 };
@@ -54,7 +54,7 @@ export class SessionServices implements ISessionServices {
             const existingSessions = await Session.find({
                 therapistId,
                 dateTime: { $gte: startOfDay, $lte: endOfDay },
-                status: { $nin: ['cancelled'] } // Exclude cancelled sessions
+                success: { $nin: ['cancelled'] } // Exclude cancelled sessions
             }).lean();
 
             // Generate available slots
@@ -66,14 +66,14 @@ export class SessionServices implements ISessionServices {
             );
 
             return {
-                status: true,
+                success: true,
                 message: "Available slots retrieved successfully",
                 content: { availableSlots }
             };
 
         } catch (error: any) {
             return {
-                status: false,
+                success: false,
                 message: error.message || "Failed to get available slots",
                 content: {}
             };
@@ -87,7 +87,7 @@ export class SessionServices implements ISessionServices {
         try {
             // Check if slot is still available
             const slotsResponse = await this.getAvailableSlots(payload.therapistId, payload.dateTime);
-            if (!slotsResponse.status) {
+            if (!slotsResponse.success) {
                 return slotsResponse;
             }
 
@@ -99,7 +99,7 @@ export class SessionServices implements ISessionServices {
 
             if (!isSlotAvailable) {
                 return {
-                    status: false,
+                    success: false,
                     message: "Selected time slot is no longer available",
                     content: {}
                 };
@@ -109,14 +109,14 @@ export class SessionServices implements ISessionServices {
             const session = new Session({
                 ...payload,
                 patientId,
-                status: 'pending',
+                success: 'pending',
                 bookingTime: new Date()
             });
 
             const savedSession = await session.save();
 
             return {
-                status: true,
+                success: true,
                 message: "Session booked successfully",
                 content: savedSession
             };
@@ -124,13 +124,13 @@ export class SessionServices implements ISessionServices {
         } catch (error: any) {
             if (error.code === 11000) {
                 return {
-                    status: false,
+                    success: false,
                     message: "Time slot already booked",
                     content: {}
                 };
             }
             return {
-                status: false,
+                success: false,
                 message: error.message || "Failed to book session",
                 content: {}
             };
@@ -145,7 +145,7 @@ export class SessionServices implements ISessionServices {
             const session = await Session.findByIdAndUpdate(
                 sessionId,
                 { 
-                    status: 'cancelled',
+                    success: 'cancelled',
                     cancellationReason: cancellationReason || 'No reason provided'
                 },
                 { new: true }
@@ -153,43 +153,58 @@ export class SessionServices implements ISessionServices {
 
             if (!session) {
                 return {
-                    status: false,
+                    success: false,
                     message: "Session not found",
                     content: {}
                 };
             }
 
             return {
-                status: true,
+                success: true,
                 message: "Session cancelled successfully. Time slot is now available.",
                 content: session
             };
 
         } catch (error: any) {
             return {
-                status: false,
+                success: false,
                 message: error.message || "Failed to cancel session",
                 content: {}
             };
         }
     }
 
-    async getAllSessions(): Promise<IServiceResponse> {
+    async getAllSessions(userId?: string): Promise<IServiceResponse> {
         try {
-            const sessions = await Session.find()
+            let sessions = [];
+            if(userId) {
+                sessions = await Session.find({
+                    $or: [
+                        {'patientId': userId},
+                        {'therapistId': userId}
+                    ]
+                })
                 .populate('patientId', 'name')
                 .populate('therapistId', 'name')
                 .sort({ dateTime: -1 })
                 .lean();
+            } else {
+                sessions = await Session.find()
+                .populate('patientId', 'name')
+                .populate('therapistId', 'name')
+                .sort({ dateTime: -1 })
+                .lean();
+            }
+            
 
             return {
-                status: true,
+                success: true,
                 message: "Sessions retrieved successfully",
                 content: sessions
             };
         } catch (error: any) {
             return {
-                status: false,
+                success: false,
                 message: error.message || "Failed to get sessions",
                 content: {}
             };
@@ -205,20 +220,20 @@ export class SessionServices implements ISessionServices {
 
             if (!session) {
                 return {
-                    status: false,
+                    success: false,
                     message: "Session not found",
                     content: {}
                 };
             }
 
             return {
-                status: true,
+                success: true,
                 message: "Session retrieved successfully",
                 content: session
             };
         } catch (error: any) {
             return {
-                status: false,
+                success: false,
                 message: error.message || "Failed to get session",
                 content: {}
             };
@@ -235,20 +250,20 @@ export class SessionServices implements ISessionServices {
 
             if (!session) {
                 return {
-                    status: false,
+                    success: false,
                     message: "Session not found",
                     content: {}
                 };
             }
 
             return {
-                status: true,
+                success: true,
                 message: "Session updated successfully",
                 content: session
             };
         } catch (error: any) {
             return {
-                status: false,
+                success: false,
                 message: error.message || "Failed to update session",
                 content: {}
             };
@@ -261,20 +276,20 @@ export class SessionServices implements ISessionServices {
 
             if (!session) {
                 return {
-                    status: false,
+                    success: false,
                     message: "Session not found",
                     content: {}
                 };
             }
 
             return {
-                status: true,
+                success: true,
                 message: "Session deleted successfully",
                 content: {}
             };
         } catch (error: any) {
             return {
-                status: false,
+                success: false,
                 message: error.message || "Failed to delete session",
                 content: {}
             };
