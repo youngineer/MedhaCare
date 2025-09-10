@@ -169,6 +169,15 @@ export class TherapistServices implements ITherapistServices {
                 };
             }
 
+            const user: IUser | null = await User.findByIdAndDelete(userId);
+            if(!user) {
+                return {
+                    status: false,
+                    message: "User therapist not found",
+                    content: {}
+                };
+            }
+
             return {
                 status: true,
                 message: "Therapist deleted successfully",
