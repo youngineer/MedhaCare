@@ -97,7 +97,6 @@ export class TherapistServices implements ITherapistServices {
 
     async updateTherapist(id: string, payload: ITherapist): Promise<IServiceResponse> {
         try {
-            // therapist records are stored with userId pointing to the User
             const dbTherapist = await Therapist.findOne({ userId: id }).exec();
             if(!dbTherapist) {
                 return {
@@ -107,10 +106,8 @@ export class TherapistServices implements ITherapistServices {
                 };
             }
 
-            // Update user fields (password & photoUrl)
             const userUpdate: Partial<IUser> = {};
             if (payload.password) {
-                // lazy import of authService hash function to avoid circular deps
                 const { hashPassword } = await import("./authServices.ts");
                 userUpdate.password = hashPassword(payload.password as string) as any;
             }
@@ -122,7 +119,6 @@ export class TherapistServices implements ITherapistServices {
                 await User.findByIdAndUpdate(id, userUpdate as any).exec();
             }
 
-            // Update therapist profile fields
             const therapistUpdate: Partial<ITherapist> = {};
             if (payload.bio !== undefined) therapistUpdate.bio = payload.bio;
             if (payload.ratePerSession !== undefined) therapistUpdate.ratePerSession = payload.ratePerSession;
@@ -133,7 +129,6 @@ export class TherapistServices implements ITherapistServices {
                 await Therapist.findByIdAndUpdate(dbTherapist._id, therapistUpdate as any).exec();
             }
 
-            // Fetch fresh combined record
             const updatedUser = await User.findById(id, 'name photoUrl').lean().exec();
             const updatedTherapist = await Therapist.findById(dbTherapist._id).lean().exec();
 
@@ -156,6 +151,32 @@ export class TherapistServices implements ITherapistServices {
         } catch (error: any) {
             return {
                 message: error?.message || "Failed to update therapist",
+                content: {},
+                status: false
+            };
+        }
+    }
+
+
+    async deleteTherapist(userId: string): Promise<IServiceResponse> {
+        try {
+            const therapist: ITherapist | null = await Therapist.findOneAndDelete({userId: userId});
+            if(!therapist) {
+                return {
+                    status: false,
+                    message: "Therapist not found",
+                    content: {}
+                };
+            }
+
+            return {
+                status: true,
+                message: "Therapist deleted successfully",
+                content: {}
+            };
+        } catch (error: any) {
+            return {
+                message: error?.message || "Failed to delete therapist",
                 content: {},
                 status: false
             };

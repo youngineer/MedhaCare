@@ -81,6 +81,7 @@ export interface ITherapistServices {
     getAllTherapists(): Promise<IServiceResponse>;
     getTherapist(id: string): Promise<IServiceResponse>;
     updateTherapist(id: string, payload: Partial<ITherapist>): Promise<IServiceResponse>;
+    deleteTherapist(id: string): Promise<IServiceResponse>;
 }
 
 
