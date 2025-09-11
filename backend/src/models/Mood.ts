@@ -17,6 +17,7 @@ const moodSchema = new Schema<IMood> ({
     },
     tags: {
         type: [String],
+        default: new Array()
     }
 },
 {timestamps: true});

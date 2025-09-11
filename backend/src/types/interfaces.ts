@@ -1,3 +1,5 @@
+import type { IUserDocument } from "../models/User.ts";
+
 export type Role = "patient" | "admin" | "therapist" | null;
 export type Gender = "male" | "female";
 export type SessionStatus = "pending" | "completed"| "patientNoShow" | "therapistNoShow" | "cancelled";
@@ -117,6 +119,14 @@ export interface IMood {
     patientId: string;
     moodLevel: number;
     tags: string[];
+}
+
+
+export interface IMoodServices {
+    addMood(payload: IMood, user: IUserDocument): Promise<IServiceResponse>;
+    getMoods(user: IUserDocument, patientId: string): Promise<IServiceResponse>;
+    getMood(moodId: string): Promise<IServiceResponse>;
+    deleteMood(moodId: string, user: IUserDocument): Promise<IServiceResponse>;
 }
 
 

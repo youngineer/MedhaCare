@@ -1,52 +1,58 @@
 
 import Patient from "../models/Patient.ts";
 import patient from "../models/Patient.ts";
+import Session from "../models/Session.ts";
 import User, { type IUserDocument } from "../models/User.ts";
 import type { IServiceResponse, IPatient, IPatientServices, IUser } from "../types/interfaces.ts";
 
 export class PatientServices implements IPatientServices {
-    async getAllPatients(): Promise<IServiceResponse> {
+    async getAllPatients(therapistId?: string): Promise<IServiceResponse> {
         try {
+            let patients = [];
 
-            const patients: IPatient[] = await Patient.find().lean().exec();
+            if(!therapistId) {
+                patients = await Patient.find().lean().exec();
+            } else {
+                const sessionPatientsIdList: string[] = await Session.find({
+                    therapistId: therapistId
+                }, 'patientId');
+
+                patients = await Promise.all(sessionPatientsIdList.map(async id => {
+                    const user: IUserDocument | null = await User.findById(id, 'name photoUrl');
+                    const patient: IPatient | null = await Patient.findOne({userId: id}, '-_id -userId');
+
+                    if(!user) return;
+
+                    return {
+                        name: user?.name,
+                        photoUrl: user?.photoUrl,
+                        gender: patient?.gender,
+                        dateOfBirth: this.calculateAge(patient?.dateOfBirth as Date),
+                        healthConditions: patient?.healthConditions,
+                        contact: patient?.contact
+                    }
+                }));
+            }
 
             if (!patients || patients.length === 0) {
                 return {
-                    status: false,
+                    success: false,
                     message: "No patients to show",
                     content: {}
                 };
             }
 
-            const userIds = patients.map(t => t.userId);
-            const users = await User.find({ _id: { $in: userIds } }, '_id name photoUrl').lean().exec();
-            const userMap = new Map<string, { _id: any; name?: string; photoUrl?: string }>();
-            users.forEach(u => userMap.set(String(u._id), u as any));
-
-            const userpatients = patients.map(t => {
-                const u = userMap.get(String(t.userId));
-                return {
-                    userId: t.userId,
-                    name: u?.name || null,
-                    photoUrl: u?.photoUrl || null,
-                    bio: (t as any).bio || null,
-                    specialties: (t as any).specialties || [],
-                    ratePerSession: (t as any).ratePerSession || 0,
-                    rating: (t as any).rating || 0
-                };
-            });
-
             return {
                 message: "patients fetched successfully!",
-                content: userpatients,
-                status: true
+                content: patients,
+                success: true
             };
 
         } catch (error: any) {
             return {
                 message: error?.message || "Failed to fetch patients",
                 content: {},
-                status: false
+                success: false
             };
         }
     }
@@ -59,7 +65,7 @@ export class PatientServices implements IPatientServices {
                 return {
                     message: "patient not found",
                     content: {},
-                    status: false
+                    success: false
                 };
             }
 
@@ -68,7 +74,7 @@ export class PatientServices implements IPatientServices {
                 return {
                     message: "patient not found",
                     content: {},
-                    status: false
+                    success: false
                 };
             }
 
@@ -85,13 +91,13 @@ export class PatientServices implements IPatientServices {
             return {
                 message: "patient fetched successfully",
                 content: toReturn,
-                status: true
+                success: true
             };
         } catch (error: any) {
             return {
                 message: error?.message || "Failed to fetch patient",
                 content: {},
-                status: false
+                success: false
             };
         }
     }
@@ -101,7 +107,7 @@ export class PatientServices implements IPatientServices {
             const dbpatient = await patient.findOne({ userId: id }).exec();
             if(!dbpatient) {
                 return {
-                    status: false,
+                    success: false,
                     message: "patient not found",
                     content: {}
                 };
@@ -144,7 +150,7 @@ export class PatientServices implements IPatientServices {
             };
 
             return {
-                status: true,
+                success: true,
                 message: "patient updated successfully",
                 content: toReturn
             };
@@ -152,7 +158,7 @@ export class PatientServices implements IPatientServices {
             return {
                 message: error?.message || "Failed to update patient",
                 content: {},
-                status: false
+                success: false
             };
         }
     }
@@ -163,7 +169,7 @@ export class PatientServices implements IPatientServices {
             const patient: IPatient | null = await Patient.findOneAndDelete({userId: userId});
             if(!patient) {
                 return {
-                    status: false,
+                    success: false,
                     message: "patient not found",
                     content: {}
                 };
@@ -172,14 +178,14 @@ export class PatientServices implements IPatientServices {
             const user: IUser | null = await User.findByIdAndDelete(userId);
             if(!user) {
                 return {
-                    status: false,
+                    success: false,
                     message: "User patient not found",
                     content: {}
                 };
             }
 
             return {
-                status: true,
+                success: true,
                 message: "patient deleted successfully",
                 content: {}
             };
@@ -187,9 +193,24 @@ export class PatientServices implements IPatientServices {
             return {
                 message: error?.message || "Failed to delete patient",
                 content: {},
-                status: false
+                success: false
             };
         }
+    }
+
+    private calculateAge(birthDate: Date) {
+        const today = new Date();
+        const birthYear = birthDate.getFullYear();
+        const birthMonth = birthDate.getMonth();
+        const birthDay = birthDate.getDate();
+
+        let age = today.getFullYear() - birthYear;
+
+        if (today.getMonth() < birthMonth || (today.getMonth() === birthMonth && today.getDate() < birthDay)) {
+            age--;
+        }
+
+        return age;
     }
 }
 
