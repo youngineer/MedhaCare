@@ -6,6 +6,9 @@ import connectToDb from './config/database.ts';
 import authController from './controllers/authController.ts';
 import therapistController from './controllers/therapistController.ts';
 import sessionController from './controllers/sessionController.ts';
+import chatController from './controllers/chatController.ts';
+import moodController from './controllers/moodController.ts';
+import patientController from './controllers/patientController.ts';
 dotenv.config();
 
 // const PORT: string = process.env.PORT as string;
@@ -26,8 +29,11 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use(authController);
+app.use(patientController);
 app.use(therapistController);
 app.use(sessionController);
+app.use(chatController);
+app.use(moodController);
 
 connectToDb()
     .then(() => {

@@ -6,7 +6,7 @@ import type { IServiceResponse, ITherapist, ITherapistServices, IUser } from "..
 export class TherapistServices implements ITherapistServices {
     async getAllTherapists(): Promise<IServiceResponse> {
         try {
-            const therapists: ITherapist[] = await Therapist.find().lean().exec();
+            const therapists = await Therapist.find().lean().exec() as ITherapist[];
 
             if (!therapists || therapists.length === 0) {
                 return {

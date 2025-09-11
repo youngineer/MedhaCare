@@ -38,7 +38,7 @@ export class MoodServices implements IMoodServices {
                 if(!validReq) throw new Error("Invalid request");
             }
 
-            const moodList: IMood[] = await Mood.find({patientId: patientId}, 'moodLevel tags created_at').exec();
+            const moodList: IMood[] = await Mood.find({patientId: patientId}, 'moodLevel tags createdAt').exec();
 
             return {
                 message: "Moods fetched successfully",

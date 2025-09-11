@@ -18,7 +18,7 @@ export interface IControllerResponse extends IServiceResponse {
 }
 
 // auth types:
-export interface ILoginRequest {
+export interface ILoginRequest extends Document {
     emailId: string;
     password: string;
 }
@@ -51,7 +51,7 @@ export interface IAuthService {
 export interface IUser extends ISignUpRequest{
     _id?: string;
     role: Role;
-    photoUrl: string;
+    photoUrl?: string;
     authenticate(password: string): Promise<boolean>;
     getJWT(): string;
 }
@@ -115,7 +115,7 @@ export interface ITherapistServices {
 
 
 // Mood Logs
-export interface IMood {
+export interface IMood extends Document {
     patientId: string;
     moodLevel: number;
     tags: string[];
@@ -130,16 +130,107 @@ export interface IMoodServices {
 }
 
 
-// ChatBot
-export interface IChatMessage {
+// Chat Types
+export type ChatType = "patient-therapist" | "patient-bot" | "therapist-bot";
+
+// Chat Interface
+export interface IChat extends Document {
+    _id?: string;
+    chatType: ChatType;
+    senderId: string; // userId of sender
+    receiverId?: string; // userId of receiver (null for bot)
+    senderRole: Role; // "patient" | "therapist"
+    message: string;
+    botResponse?: string; // Only present when chatType involves bot
+    timestamp: Date;
+    isRead?: boolean;
+}
+
+// Enhanced AI Context Interfaces
+export interface IAIContext {
+    userProfile: IUserProfile;
+    conversationHistory: IConversationMessage[];
+    therapeuticContext: ITherapeuticContext;
+    sessionMetadata: ISessionMetadata;
+    systemPrompt: string;
+}
+
+export interface IUserProfile {
     userId: string;
-    userMessage: string;
-    botResponse: string
+    role: Role;
+    name: string;
+    recentMoodTrend?: number; // Average mood from last 7 days
+    currentRiskLevel?: "low" | "medium" | "high" | "critical";
+    preferredCommunicationStyle?: "direct" | "gentle" | "structured" | "casual";
+    therapeuticGoals?: string[];
+}
+
+export interface IConversationMessage {
+    senderId: string;
+    senderRole: Role;
+    message: string;
+    timestamp: Date;
+    emotionalTone?: "positive" | "negative" | "neutral" | "distressed" | "hopeful";
+    isFromBot?: boolean;
+}
+
+export interface ITherapeuticContext {
+    currentSessionId?: string;
+    therapistId?: string; // For patient-bot chats, include assigned therapist
+    recentMoodEntries?: IMoodContext[];
+    upcomingAppointments?: Date[];
+    lastTherapySession?: Date;
+    treatmentPhase?: "initial" | "active" | "maintenance" | "crisis";
+}
+
+export interface IMoodContext {
+    moodLevel: number;
+    tags: string[];
+    timestamp: Date;
+    notes?: string;
+}
+
+export interface ISessionMetadata {
+    timeOfDay: "morning" | "afternoon" | "evening" | "night";
+    dayOfWeek: string;
+    isEmergencyHours: boolean;
+    conversationDuration: number; // minutes
+    messageCount: number;
+}
+
+export interface IAIResponse {
+    response: string;
+    responseType: "supportive" | "educational" | "crisis" | "referral" | "check_in";
+    emotionalTone: "empathetic" | "encouraging" | "calm" | "urgent";
+    confidenceScore: number;
+    flagsForTherapist?: string[];
+    suggestedFollowUp?: string;
+    escalationRequired?: boolean;
+}
+
+export interface IChatServices {
+    // Send message (handles all three types)
+    sendMessage(senderId: string, message: string, chatType: ChatType, receiverId?: string): Promise<IServiceResponse>;
+    
+    // Get chat history for different interfaces
+    getPatientTherapistChats(patientId: string, therapistId: string): Promise<IServiceResponse>;
+    getPatientBotChats(patientId: string): Promise<IServiceResponse>;
+    getTherapistBotChats(therapistId: string): Promise<IServiceResponse>;
+    
+    // Mark messages as read
+    markMessagesAsRead(userId: string, chatType: ChatType, partnerId?: string): Promise<IServiceResponse>;
+    
+    // Get unread message count
+    getUnreadCount(userId: string): Promise<IServiceResponse>;
+    
+    // Enhanced AI context methods
+    buildAIContext(senderId: string, chatType: ChatType, receiverId?: string): Promise<IAIContext>;
+    getEnhancedAIResponse(context: IAIContext, userMessage: string): Promise<IAIResponse>;
 }
 
 
 // Session
-export interface ISession {
+export interface ISession extends Document {
     _id?: string;
     patientId: string;
     therapistId: string;
