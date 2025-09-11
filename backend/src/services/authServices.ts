@@ -10,6 +10,7 @@ import type {
 import User from "../models/User.ts";
 import Patient from "../models/Patient.ts";
 import Therapist from "../models/Therapist.ts";
+import { DEFAULT_PHOTO_URL, PATIENT_PHOTO_URL, THERAPIST_BIO, THERAPIST_PHOTO_URL } from "../utils/constants.ts";
 
 export const hashPassword = (password: string): string => {
     return bcrypt.hashSync(password, 10);
@@ -33,13 +34,21 @@ export class AuthService implements IAuthService {
                     message: "Email already registered"
                 };
             }
+            
+            let photoUrl: string = DEFAULT_PHOTO_URL;
+            if(role === 'patient') {
+                photoUrl = PATIENT_PHOTO_URL;
+            } else if(role === 'therapist') {
+                photoUrl = THERAPIST_PHOTO_URL;
+            }
 
             // Create new user
             const user = new User({
                 name,
                 emailId,
                 password: hashPassword(password),
-                role
+                role,
+                photoUrl: photoUrl
             });
 
             const savedUser = await user.save();
