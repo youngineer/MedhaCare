@@ -286,9 +286,6 @@ export class ChatServices implements IChatServices {
         }
     }
 
-    /**
-     * Get unread message count for a user
-     */
     async getUnreadCount(userId: string): Promise<IServiceResponse> {
         try {
             const unreadCount = await Chat.countDocuments({

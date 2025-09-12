@@ -6,7 +6,7 @@ import type { ChatType } from '../types/interfaces.ts';
 
 const chatController: Router = express.Router();
 
-chatController.post("/chat/send", auth, async (req: Request, resp: Response): Promise<void> => {
+chatController.post("/chat/post", auth, async (req: Request, resp: Response): Promise<void> => {
     try {
         const { message, chatType, receiverId } = req.body;
         const senderId = req.user?._id;

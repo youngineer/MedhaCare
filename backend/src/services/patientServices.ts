@@ -10,56 +10,83 @@ export class PatientServices implements IPatientServices {
         try {
             let patients = [];
 
-            if(!therapistId) {
-                patients = await Patient.find().lean().exec();
+            if (!therapistId) {
+                const allPatients = await Patient.find().lean().exec();
+
+                patients = await Promise.all(
+                    allPatients.map(async (patient) => {
+                        const user = await User.findById(patient.userId, 'name photoUrl');
+                        if (!user) return null;
+
+                        return {
+                            name: user.name,
+                            photoUrl: user.photoUrl,
+                            gender: patient.gender,
+                            dateOfBirth: this.calculateAge(patient.dateOfBirth),
+                            healthConditions: patient.healthConditions,
+                            contact: patient.contact,
+                        };
+                    })
+                );
+
             } else {
-                const sessionPatientsIdList: string[] = await Session.find({
-                    therapistId: therapistId
-                }, 'patientId');
+                const sessionDocs = await Session.find({ therapistId }, 'patientId').lean().exec();
+                const sessionPatientsIdList = sessionDocs.map(doc => doc.patientId.toString());
 
+                patients = await Promise.all(
+                    sessionPatientsIdList.map(async (id) => {
+                        try {
+                            const user = await User.findById(id, 'name photoUrl').lean().exec();
+                            if (!user) return null;
 
-                patients = await Promise.all(sessionPatientsIdList.map(async id => {
-                    const user: IUserDocument | null = await User.findById(id, 'name photoUrl');
-                    const patient: IPatient | null = await Patient.findOne({userId: id}, '-_id -userId');
+                            const patient = await Patient.findOne({ userId: id }, '-_id -userId').lean().exec();
+                            if (!patient) return null;
 
-                    if(!user) return;
-
-                    return {
-                        name: user?.name,
-                        photoUrl: user?.photoUrl,
-                        gender: patient?.gender,
-                        dateOfBirth: this.calculateAge(patient?.dateOfBirth as Date),
-                        healthConditions: patient?.healthConditions,
-                        contact: patient?.contact
-                    }
-                }));
+                            return {
+                                name: user.name,
+                                photoUrl: user.photoUrl,
+                                gender: patient.gender,
+                                dateOfBirth: this.calculateAge(patient.dateOfBirth),
+                                healthConditions: patient.healthConditions,
+                                contact: patient.contact,
+                            };
+                        } catch (err) {
+                            console.error(`Error processing patient ID ${id}:`, err);
+                            return null;
+                        }
+                    })
+                );
             }
-            if (!patients || patients.length === 0) {
+
+            patients = patients.filter(Boolean);
+
+            if (patients.length === 0) {
                 return {
                     success: false,
                     message: "No patients to show",
-                    content: {}
+                    content: {},
                 };
             }
 
             return {
-                message: "patients fetched successfully!",
+                success: true,
+                message: "Patients fetched successfully!",
                 content: patients,
-                success: true
             };
-
         } catch (error: any) {
             return {
+                success: false,
                 message: error?.message || "Failed to fetch patients",
                 content: {},
-                success: false
             };
         }
     }
 
+
     async getPatient(id: string): Promise<IServiceResponse> {
         try {
-            const patientUser: IUserDocument | null = await User.findOne({ _id: id, role: "patient" }, 'name photoUrl').exec();
+            const patientUser: Partial<IUserDocument> | null = await User.findOne({ _id: id}, 'name photoUrl').exec();
+            console.log(patientUser)
 
             if (!patientUser) {
                 return {
@@ -80,8 +107,8 @@ export class PatientServices implements IPatientServices {
 
             const toReturn = {
                 userId: id,
-                name: patient?.name,
-                photoUrl: patient?.photoUrl,
+                name: patientUser?.name,
+                photoUrl: patientUser?.photoUrl,
                 healthConditions: patient?.healthConditions,
                 dateOfBirth: patient?.dateOfBirth,
                 gender: patient?.gender,

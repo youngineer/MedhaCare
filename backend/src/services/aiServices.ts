@@ -44,7 +44,7 @@ export async function getEnhancedAIResponse(context: IAIContext, userMessage: st
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        "model": "google/gemma-3n-e4b-it:free",
+        "model": "meta-llama/llama-3.3-8b-instruct:free",
         messages: [
           {
             "role": "system",

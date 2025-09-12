@@ -18,7 +18,7 @@ const sessionSchema = new Schema<ISession>({
     },
     duration: {
         type: Number,
-        default: 60, // minutes
+        default: 60,
         required: true
     },
     status: {
@@ -36,7 +36,8 @@ const sessionSchema = new Schema<ISession>({
         default: Date.now
     },
     cancellationReason: {
-        type: String
+        type: String,
+        default: ''
     }
 }, { timestamps: true });
 

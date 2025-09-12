@@ -4,10 +4,6 @@ import User from "../models/User.ts";
 import type { IServiceResponse, ISession, ISessionServices, ITherapist } from "../types/interfaces.ts";
 
 export class SessionServices implements ISessionServices {
-    
-    /**
-     * Get available time slots for a therapist on a specific date
-     */
     async getAvailableSlots(therapistId: string, date: Date): Promise<IServiceResponse> {
         try {
             const therapist = await Therapist.findOne({ userId: therapistId }).lean();
@@ -80,27 +76,26 @@ export class SessionServices implements ISessionServices {
         }
     }
 
-    /**
-     * Book a session
-     */
     async postSession(patientId: string, payload: ISession): Promise<IServiceResponse> {
         try {
-            // Check if slot is still available
-            const slotsResponse = await this.getAvailableSlots(payload.therapistId, payload.dateTime);
+            const sessionDate = new Date(payload.dateTime);
+            const slotsResponse = await this.getAvailableSlots(payload.therapistId, sessionDate);
             if (!slotsResponse.success) {
                 return slotsResponse;
             }
 
             const availableSlots = (slotsResponse.content as any).availableSlots;
-            const requestedTime = payload.dateTime.toISOString();
-            const isSlotAvailable = availableSlots.some((slot: any) => 
+            const requestedTime = sessionDate.toISOString();
+
+            const isSlotAvailable = availableSlots.some((slot: any) =>
                 new Date(slot.start).toISOString() === requestedTime
             );
+
 
             if (!isSlotAvailable) {
                 return {
                     success: false,
-                    message: "Selected time slot is no longer available",
+                    message: "Selected time slot is not available",
                     content: {}
                 };
             }
@@ -122,6 +117,7 @@ export class SessionServices implements ISessionServices {
             };
 
         } catch (error: any) {
+            console.error(error);
             if (error.code === 11000) {
                 return {
                     success: false,
@@ -137,9 +133,6 @@ export class SessionServices implements ISessionServices {
         }
     }
 
-    /**
-     * Cancel a session (makes the slot available again)
-     */
     async cancelSession(sessionId: string, cancellationReason?: string): Promise<IServiceResponse> {
         try {
             const session = await Session.findByIdAndUpdate(
@@ -303,7 +296,7 @@ export class SessionServices implements ISessionServices {
         date: Date
     ): { start: Date; end: Date }[] {
         const slots: { start: Date; end: Date }[] = [];
-        const slotDuration = 60; // 60 minutes per slot
+        const slotDuration = 60;
         
         const timeNumbers = startTime.split(':').map(Number);
         const endTimeNumbers = endTime.split(':').map(Number);

@@ -29,7 +29,7 @@ patientController.get("/patient/get", auth, async(req: Request, resp: Response):
 patientController.get("/patient/get/:userId", auth, async(req: Request, resp: Response): Promise<void> => {
     try {
         const patientId = req?.params?.userId;
-        if(!patientId || patientId != req?.user?._id) throw new Error("Invalid request");
+        if(!patientId) throw new Error("Invalid request");
 
         const serviceResponse = await patientServices.getPatient(patientId);
         if (serviceResponse.success) {
@@ -43,10 +43,10 @@ patientController.get("/patient/get/:userId", auth, async(req: Request, resp: Re
 });
 
 
-patientController.patch("/patient/update/:userId", auth, async(req: Request, resp: Response): Promise<void> => {
+patientController.patch("/patient/update", auth, async(req: Request, resp: Response): Promise<void> => {
     try {
         const patientId = req?.user?._id;
-        if(!patientId || (req?.user?.role === "therapist")) throw new Error("Invalid request");
+        if(!patientId || (req?.user?.role !== "patient")) throw new Error("Invalid request");
         const payload = req?.body;
         if(!patientId) throw new Error("Invalid request");
 
