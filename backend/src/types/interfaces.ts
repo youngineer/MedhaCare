@@ -64,14 +64,18 @@ export interface IPatient extends IUser{
     dateOfBirth: Date;
     healthConditions: string[];
     contact: string;
+    aiReport: string | IAIResponse | { message: string }
 }
 
 // Patient services
 export interface IPatientServices {
-    getAllPatients(): Promise<IServiceResponse>;
+    getAllPatients(therapistId?: string): Promise<IServiceResponse>;
     getPatient(id: string): Promise<IServiceResponse>;
     updatePatient(id: string, payload: Partial<IPatient>): Promise<IServiceResponse>;
     deletePatient(id: string): Promise<IServiceResponse>;
+    generateSummary(id: string): Promise<IServiceResponse>;
+    buildAIContext(senderId: string, chatType: ChatType, receiverId?: string): Promise<IAIContext>;
+    getEnhancedAIResponse(context: IAIContext, userMessage: string): Promise<IAIResponse>;
 }
 
 

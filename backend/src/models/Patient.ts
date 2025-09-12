@@ -34,6 +34,11 @@ const patientSchema  = new Schema<IPatient>({
             }
         }, 
         trim: true
+    },
+    aiReport: {
+        type: Schema.Types.Mixed,
+        required: false,
+        default: { message: 'No reports generated yet.' }
     }
 },
 { timestamps: true });

@@ -20,20 +20,30 @@ export async function getAiResponse(prompt: string): Promise<any | null> {
       })
     });
 
-    // Await and parse the JSON content of the response
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.error(`AI API error: ${response.status} ${response.statusText}`);
+      return null;
+    }
+    
     const jsonResponse = await response.json();
     const requiredJson = jsonResponse?.choices[0]?.message?.content;
     
     return getJsonFromAIResponse(requiredJson);
   } catch (e) {
-    console.error("Failed to parse AI response as JSON:", e);
+    console.error("Failed to get AI response:", e);
     return null;
   }
 }
 
 export async function getEnhancedAIResponse(context: IAIContext, userMessage: string): Promise<IAIResponse | null> {
   try {
+    
+    // Check API key
+    if (!process.env.OPENROUTER_API_KEY) {
+      console.error('OPENROUTER_API_KEY not found in environment variables');
+      return null;
+    }
+
     // Build context-aware prompt
     const contextualPrompt = buildContextualPrompt(context, userMessage);
     
@@ -48,7 +58,7 @@ export async function getEnhancedAIResponse(context: IAIContext, userMessage: st
         messages: [
           {
             "role": "system",
-            "content": context.systemPrompt
+            "content": getSystemPromptForRole(context.userProfile.role)
           },
           {
             "role": "user",
@@ -61,11 +71,14 @@ export async function getEnhancedAIResponse(context: IAIContext, userMessage: st
     });
 
     if (!response.ok) {
-      console.error("AI API error:", response.status, response.statusText);
+      console.error(`AI API error: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('Error details:', errorText);
       return null;
     }
 
     const jsonResponse = await response.json();
+    
     const aiContent = jsonResponse?.choices[0]?.message?.content;
     
     if (!aiContent) {
@@ -73,12 +86,19 @@ export async function getEnhancedAIResponse(context: IAIContext, userMessage: st
       return null;
     }
 
+
     // Parse the JSON response from AI
     const parsedResponse = getJsonFromAIResponse(aiContent) as IAIResponse;
     
     // Validate response structure
-    if (!parsedResponse || typeof parsedResponse.response !== 'string') {
-      console.error("Invalid AI response structure");
+    if (!parsedResponse) {
+      console.error("Failed to parse AI response as JSON");
+      return null;
+    }
+
+    if (typeof parsedResponse.response !== 'string') {
+      console.error("Invalid AI response structure - missing response field");
+      console.error('📄 Parsed response:', parsedResponse);
       return null;
     }
 
@@ -90,79 +110,121 @@ export async function getEnhancedAIResponse(context: IAIContext, userMessage: st
   }
 }
 
+function getSystemPromptForRole(role: string | null): string {
+  switch (role) {
+    case 'therapist':
+      return THERAPIST_BOT_ENHANCED_PROMPT;
+    case 'patient':
+    default:
+      return `You are MindCare's AI wellness coach. You provide supportive, empathetic responses to help patients with their mental health concerns. 
+
+IMPORTANT: You must ALWAYS respond with valid JSON in this exact format:
+{
+  "response": "Your helpful, empathetic message here",
+  "responseType": "supportive",
+  "emotionalTone": "empathetic", 
+  "confidenceScore": 0.85,
+  "escalationRequired": false,
+  "flagsForTherapist": null,
+  "suggestedFollowUp": null
+}
+
+Keep your response warm, supportive, and helpful. Focus on the user's immediate needs while being encouraging.`;
+  }
+}
+
 function buildContextualPrompt(context: IAIContext, userMessage: string): string {
   const { userProfile, conversationHistory, therapeuticContext, sessionMetadata } = context;
   
-  // Build conversation history string
+  // Build conversation history string (limit to recent messages to avoid token limits)
   const historyString = conversationHistory
-    .slice(-10) // Last 10 messages
-    .map(msg => `[${msg.timestamp.toISOString()}] ${msg.senderRole}: ${msg.message}`)
+    .slice(-5) // Last 5 messages only
+    .map(msg => `${msg.senderRole}: ${msg.message}`)
     .join('\n');
 
   // Build mood context if available
   const moodContext = therapeuticContext.recentMoodEntries
     ? therapeuticContext.recentMoodEntries
-        .slice(-5) // Last 5 mood entries
-        .map(mood => `Mood: ${mood.moodLevel}/10 (${mood.timestamp.toISOString()}) - Tags: ${mood.tags.join(', ')}`)
+        .slice(-3) // Last 3 mood entries only
+        .map(mood => `Mood: ${mood.moodLevel}/10 - Tags: ${mood.tags.join(', ')}`)
         .join('\n')
-    : 'No recent mood data available';
+    : 'No recent mood data';
 
   const prompt = `
-PATIENT CONTEXT:
+PATIENT INFO:
 - Name: ${userProfile.name}
-- Role: ${userProfile.role}
+- Current Risk Level: ${userProfile.currentRiskLevel || 'Unknown'}
 - Recent Mood Trend: ${userProfile.recentMoodTrend || 'Unknown'}/10
-- Risk Level: ${userProfile.currentRiskLevel || 'Unknown'}
-- Communication Style: ${userProfile.preferredCommunicationStyle || 'Not specified'}
-- Therapeutic Goals: ${userProfile.therapeuticGoals?.join(', ') || 'Not specified'}
 
-RECENT CONVERSATION HISTORY:
+RECENT CONVERSATION:
 ${historyString || 'No previous conversation'}
 
-MOOD CONTEXT (Last 7 days):
+RECENT MOOD DATA:
 ${moodContext}
 
-THERAPEUTIC CONTEXT:
-- Treatment Phase: ${therapeuticContext.treatmentPhase || 'Unknown'}
-- Last Therapy Session: ${therapeuticContext.lastTherapySession?.toISOString() || 'Unknown'}
-- Upcoming Appointments: ${therapeuticContext.upcomingAppointments?.length || 0} scheduled
-
-SESSION METADATA:
+TIME CONTEXT:
 - Time of Day: ${sessionMetadata.timeOfDay}
-- Day of Week: ${sessionMetadata.dayOfWeek}
 - Emergency Hours: ${sessionMetadata.isEmergencyHours ? 'Yes' : 'No'}
-- Conversation Duration: ${sessionMetadata.conversationDuration} minutes
-- Message Count: ${sessionMetadata.messageCount}
 
-CURRENT MESSAGE FROM USER:
+USER'S CURRENT MESSAGE:
 "${userMessage}"
 
-Please analyze this context and provide an appropriate response following the guidelines in your system prompt.
+Please provide a supportive response in the required JSON format. Be empathetic and helpful.
   `;
 
   return prompt;
 }
 
 function getJsonFromAIResponse(text: string): any | null {
+  if (!text) {
+    console.error("Empty AI response text");
+    return null;
+  }
+
   try {
-    // First try to parse the entire text as JSON
-    return JSON.parse(text);
+    const parsed = JSON.parse(text);
+    return parsed;
   } catch (e) {
-    // If that fails, try to extract JSON from between curly braces
     try {
       const start = text.indexOf('{');
       const end = text.lastIndexOf('}') + 1;
       
       if (start === -1 || end === 0) {
-        console.error("No JSON found in AI response");
-        return null;
+        console.error("No JSON braces found in AI response");
+        
+        // Try to create a valid JSON response from plain text
+        const fallbackResponse = {
+          response: text.trim(),
+          responseType: "supportive",
+          emotionalTone: "empathetic",
+          confidenceScore: 0.7,
+          escalationRequired: false,
+          flagsForTherapist: null,
+          suggestedFollowUp: null
+        };
+        
+        return fallbackResponse;
       }
       
       const jsonText = text.slice(start, end);
-      return JSON.parse(jsonText);
+      
+      const parsed = JSON.parse(jsonText);
+      return parsed;
     } catch (e2) {
-      console.error("Failed to parse AI response as JSON:", e2);
-      return null;
+      console.error("Failed to parse extracted JSON:", e2);
+      
+      // Last resort: create a response from the text
+      const lastResortResponse = {
+        response: text.trim() || "I'm here to help you. Could you please share more about how you're feeling?",
+        responseType: "supportive",
+        emotionalTone: "empathetic", 
+        confidenceScore: 0.5,
+        escalationRequired: false,
+        flagsForTherapist: null,
+        suggestedFollowUp: null
+      };
+      
+      return lastResortResponse;
     }
   }
 }
