@@ -17,6 +17,7 @@ export class PatientServices implements IPatientServices {
                     therapistId: therapistId
                 }, 'patientId');
 
+
                 patients = await Promise.all(sessionPatientsIdList.map(async id => {
                     const user: IUserDocument | null = await User.findById(id, 'name photoUrl');
                     const patient: IPatient | null = await Patient.findOne({userId: id}, '-_id -userId');
@@ -33,7 +34,6 @@ export class PatientServices implements IPatientServices {
                     }
                 }));
             }
-
             if (!patients || patients.length === 0) {
                 return {
                     success: false,
