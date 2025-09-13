@@ -1,9 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-:root {
-  /* daisyUI theme "forest" variables converted to standard CSS variables */
-  color-scheme: dark;
+@import "tailwindcss";
+@plugin "daisyui";
+
+@plugin "daisyui/theme" {
+  name: "forest";
+  default: true;
+  prefersdark: true;
+  color-scheme: "dark";
   --color-base-100: oklch(20.84% 0.008 17.911);
   --color-base-200: oklch(18.522% 0.007 17.911);
   --color-base-300: oklch(16.203% 0.007 17.911);
