@@ -1,11 +1,13 @@
 
 import bcrypt from "bcrypt";
+import jwt from 'jsonwebtoken'
 import type { 
     IAuthService, 
     ILoginRequest, 
     ISignUpRequest, 
     ILoginResponse, 
-    ISignUpResponse 
+    ISignUpResponse, 
+    IServiceResponse
 } from "../types/interfaces.ts";
 import User from "../models/User.ts";
 import Patient from "../models/Patient.ts";

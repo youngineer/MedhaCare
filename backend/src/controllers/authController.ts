@@ -3,6 +3,7 @@ import express from 'express';
 import { authService } from "../services/authServices.ts";
 import { createResponse } from "../utils/helperFunctions.ts";
 import type { ILoginRequest, ISignUpRequest } from "../types/interfaces.ts";
+import { auth } from "../middleware/auth.ts";
 
 // path-> /auth
 const authController: Router = express.Router();
@@ -52,6 +53,7 @@ authController.post("/auth/logout", async(req: Request, resp: Response) => {
     });
 
     resp.status(200).json(createResponse("Logout successful!", {}, null));
-})
+});
+
 
 export default authController;

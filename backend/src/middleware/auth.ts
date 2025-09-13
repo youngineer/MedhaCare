@@ -15,6 +15,30 @@ export async function auth(req: Request, resp: Response, next: NextFunction): Pr
             resp.status(302).json(createResponse("Session expired. Please login again", {}, null)).redirect("/auth/login");
         }
 
+        const decoded = jwt.decode(token);
+        if (!decoded || typeof decoded !== 'object') {
+            resp.status(401).json(
+                createResponse("Invalid or expired token. Please log in again.", {}, null)
+            );
+            return;
+        }
+
+        const expiry = (decoded as jwt.JwtPayload).exp;
+        if (typeof expiry !== 'number') {
+            resp.status(401).json(
+                createResponse("Invalid or expired token. Please log in again.", {}, null)
+            );
+            return;
+        }
+
+        const now = new Date();
+        if(now.getTime() > expiry * 1000) {
+            resp.status(401).json(
+                createResponse("Invalid or expired token. Please log in again.", {}, null)
+            );
+            return;
+        }
+
         const jwtSecret: string = process.env.JWT_SECRET as string;
         if (!jwtSecret) {
             throw new Error("JWT_SECRET is not defined in environment variables.");
