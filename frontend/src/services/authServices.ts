@@ -15,16 +15,17 @@ export class AuthServices implements IAuthServices {
         });
 
         try {
-            const asyncResponse: Response = await fetch(request);
-            const response: IBackendResponse = await asyncResponse.json();
+            const response: Response = await fetch(request);
 
-            if(!asyncResponse.ok) {
-                return Promise.reject(response.message || 'Signup failed. Please try again');
-            } else {
-                return response.message;
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Login failed');
             }
-        } catch (error: any) {
-            return Promise.reject(error);
+
+            return await response.json();
+        } catch (error) {
+            console.error('Login error:', error);
+            throw error;
         }
     }
 
@@ -43,16 +44,17 @@ export class AuthServices implements IAuthServices {
         });
 
         try {
-            const asyncResponse: Response = await fetch(request);
-            const response: IBackendResponse = await asyncResponse.json();
+            const response: Response = await fetch(request);
 
-            if(!asyncResponse.ok) {
-                return Promise.reject(response.message || 'Login failed. Please try again');
-            } else {
-                return response.message;
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Login failed');
             }
-        } catch (error: any) {
-            return Promise.reject(error);
+
+            return await response.json();
+        } catch (error) {
+            console.error('Login error:', error);
+            throw error;
         }
     }
 
@@ -65,16 +67,17 @@ export class AuthServices implements IAuthServices {
         });
 
         try {
-            const asyncResponse: Response = await fetch(request);
-            const response: IBackendResponse = await asyncResponse.json();
+            const response: Response = await fetch(request);
 
-            if(!asyncResponse.ok) {
-                return Promise.reject(response.message || 'Logout failed. Please try again');
-            } else {
-                return response.message;
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Login failed');
             }
-        } catch (error: any) {
-            return Promise.reject(error);
+
+            return await response.json();
+        } catch (error) {
+            console.error('Login error:', error);
+            throw error;
         }
     }
 };
