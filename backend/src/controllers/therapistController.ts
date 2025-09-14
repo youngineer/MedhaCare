@@ -7,6 +7,7 @@ const therapistController: Router = express.Router();
 
 
 therapistController.get("/therapist/get", auth, async(req: Request, resp: Response): Promise<void> => {
+    console.log("Fetching all therapist");
     try {
         const serviceResponse = await therapistServices.getAllTherapists();
         resp.status(200).json(createResponse(serviceResponse?.message, serviceResponse.content, req?.user?.role));

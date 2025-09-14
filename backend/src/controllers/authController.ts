@@ -28,7 +28,7 @@ authController.post("/auth/login", async (req: Request, resp: Response): Promise
         const result = await authService.login(loginData);
         
         if (result.success) {
-            const token = result?.token;
+            const token = result?.content?.token;
             resp.cookie("token", token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
@@ -36,7 +36,7 @@ authController.post("/auth/login", async (req: Request, resp: Response): Promise
                 maxAge: 24 * 60 * 60 * 1000
             });
 
-            resp.status(200).json(createResponse(result.message, {}, result.role || null));
+            resp.status(200).json(createResponse(result.message, {user: result.content.user}, result.content.role || null));
         } else {
             resp.status(401).json(createResponse(result.message, {}, null));
         }

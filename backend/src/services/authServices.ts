@@ -83,7 +83,6 @@ export class AuthService implements IAuthService {
 
                 const savedTherapist = await therapist.save();
                 if (!savedTherapist) {
-                    // Cleanup user if therapist creation fails
                     await User.findByIdAndDelete(savedUser.id);
                     return {
                         success: false,
@@ -105,17 +104,19 @@ export class AuthService implements IAuthService {
         }
     }
 
-    async login(loginData: ILoginRequest): Promise<ILoginResponse> {
+    async login(loginData: ILoginRequest): Promise<IServiceResponse> {
         try {
             const { emailId, password } = loginData;
             
-            const user = await User.findOne({ emailId });
+            const user = await User.findOne({ emailId }, '-__v');
             
             if (!user || !user.password) {
                 return {
                     success: false,
                     message: "Invalid login credentials",
-                    token: ""
+                    content: {
+                        token: ""
+                    }
                 };
             }
 
@@ -124,7 +125,9 @@ export class AuthService implements IAuthService {
                 return {
                     success: false,
                     message: "Invalid credentials",
-                    token: ""
+                    content: {
+                        token: ""
+                    }
                 };
             }
 
@@ -133,14 +136,20 @@ export class AuthService implements IAuthService {
             return {
                 success: true,
                 message: "Login successful!",
-                role: user?.role,
-                token: token
+                content: {
+                    token: token,
+                    user: user,
+                    role: user?.role
+                }
             };
 
         } catch (error: any) {
             return {
                 success: false,
-                message: error.message || "An error occurred during login"
+                message: error.message || "An error occurred during login",
+                content: {
+                    token: ""
+                }
             };
         }
     }

@@ -10,7 +10,7 @@ export type SessionStatus = "pending" | "completed"| "patientNoShow" | "therapis
 export interface IServiceResponse {
     success?: boolean;
     message: string;
-    content: Object;
+    content: any;
 }
 // Response
 export interface IControllerResponse extends IServiceResponse {
@@ -43,7 +43,7 @@ export interface ISignUpResponse {
 // Service interfaces
 export interface IAuthService {
     signup(signupData: ISignUpRequest): Promise<ISignUpResponse>;
-    login(loginData: ILoginRequest): Promise<ILoginResponse>;
+    login(loginData: ILoginRequest): Promise<IServiceResponse>;
 }
 
 
