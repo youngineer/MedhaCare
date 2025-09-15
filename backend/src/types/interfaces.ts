@@ -118,6 +118,20 @@ export interface ITherapistServices {
 }
 
 
+export interface IUserDto extends Partial<IUser> {
+    gender?: Gender;
+    dateOfBirth?: Date;
+    healthConditions?: string[];
+    contact?: string;
+    aiReport?: string | IAIResponse | { message: string };
+    bio?: string;
+    specialties?: string[];
+    ratePerSession?: number;
+    workingHours?: IWeeklyAvailability;
+    daysOff?: Date[];
+    rating?: number;
+}
+
 // Mood Logs
 export interface IMood extends Document {
     patientId: string;

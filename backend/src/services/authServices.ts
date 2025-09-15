@@ -1,4 +1,3 @@
-
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken'
 import type { 
@@ -7,7 +6,9 @@ import type {
     ISignUpRequest, 
     ILoginResponse, 
     ISignUpResponse, 
-    IServiceResponse
+    IServiceResponse,
+    IPatient,
+    IUserDto
 } from "../types/interfaces.ts";
 import User from "../models/User.ts";
 import Patient from "../models/Patient.ts";
@@ -94,6 +95,7 @@ export class AuthService implements IAuthService {
             return {
                 success: true,
                 message: "User created successfully!"
+
             };
 
         } catch (error: any) {
@@ -108,48 +110,77 @@ export class AuthService implements IAuthService {
         try {
             const { emailId, password } = loginData;
             
-            const user = await User.findOne({ emailId }, '-__v');
+            // fetch user (ensure model method 'authenticate' and 'getJWT' exist)
+            const user = await User.findOne({ emailId }).select('+password');
             
-            if (!user || !user.password) {
+            if (!user) {
                 return {
                     success: false,
                     message: "Invalid login credentials",
-                    content: {
-                        token: ""
-                    }
+                    content: {}
                 };
             }
 
-            const isPasswordValid = await user.authenticate(password);
+            // Prefer model's authenticate if available, otherwise compare manually
+            let isPasswordValid = false;
+            if (typeof (user as any).authenticate === 'function') {
+                isPasswordValid = await (user as any).authenticate(password);
+            } else if (user.password) {
+                isPasswordValid = verifyPassword(password, user.password);
+            }
+
             if (!isPasswordValid) {
                 return {
                     success: false,
                     message: "Invalid credentials",
-                    content: {
-                        token: ""
-                    }
+                    content: {}
                 };
             }
 
-            const token: string = user.getJWT();
+            // Generate token via model helper if available, else sign directly
+            let token: string;
+            if (typeof (user as any).getJWT === 'function') {
+                token = (user as any).getJWT();
+            } else {
+                const jwtSecret = process.env.JWT_SECRET || 'change_this_secret';
+                token = jwt.sign({ _id: user._id, role: user.role }, jwtSecret, { expiresIn: '24h' });
+            }
+
+            // Build safe user DTO
+            const baseUser = {
+                _id: user._id,
+                name: user.name,
+                emailId: user.emailId,
+                role: user.role,
+                photoUrl: (user as any).photoUrl || DEFAULT_PHOTO_URL
+            } as IUserDto;
+
+            // Fetch role-specific profile and merge
+            let profile: Partial<IUserDto> | null = null;
+            if (user.role === 'patient') {
+                profile = await Patient.findOne({ userId: user._id }).lean().select('gender dateOfBirth contact healthConditions aiReport') as Partial<IUserDto> | null;
+            } else if (user.role === 'therapist') {
+                profile = await Therapist.findOne({ userId: user._id }).lean().select('bio specialties ratePerSession rating workingHours daysOff') as Partial<IUserDto> | null;
+            }
+
+            const combinedUser = { ...baseUser, ...(profile || {}) };
 
             return {
                 success: true,
                 message: "Login successful!",
                 content: {
-                    token: token,
-                    user: user,
-                    role: user?.role
+                    token,
+                    user: combinedUser,
+                    role: user.role
                 }
             };
 
         } catch (error: any) {
+            console.error("authService.login error:", error);
             return {
                 success: false,
                 message: error.message || "An error occurred during login",
-                content: {
-                    token: ""
-                }
+                content: {}
             };
         }
     }
